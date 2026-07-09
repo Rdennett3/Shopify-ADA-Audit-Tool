@@ -1,0 +1,38 @@
+# Node dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+*.log
+logs/
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# JetBrains
+.idea/
+
+# Coverage
+coverage/
+
+# Build output
+dist/
+build/
+
+# Temporary files
+tmp/
+.cache/
+
+# Docker volumes
+mongodb-data/
+mongo-data/
+data/db/
+
+# npm
+npm-debug.log*
