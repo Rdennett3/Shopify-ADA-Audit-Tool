@@ -1,0 +1,13 @@
+:root {
+    --electric-blue: #020887;
+    --dust-grey: #DDD1C7;
+    --white: #ffffff;
+}
+
+.main-btn {
+    padding: 5px 20px;
+    background: var(--electric-blue);
+    color: var(--white);
+    border-radius: 5px;
+    font-weight: bold;
+}

@@ -1,4 +1,7 @@
 import type {
+    InspectionResult,
+    PageListItem,
+    PageReport,
     ReportSummary,
     ScanJob,
 } from "@/lib/types";
@@ -35,7 +38,9 @@ export async function getReportSummary(
     return res.json();
 }
 
-export async function getReportPages(id: string) {
+export async function getReportPages(
+    id: string
+): Promise<PageListItem[]> {
     const res = await fetch(
         `${API_BASE_URL}/report/${encodeURIComponent(id)}/pages`,
         {
@@ -50,7 +55,10 @@ export async function getReportPages(id: string) {
     return res.json();
 }
 
-export async function getReportPage(id: string, url: string) {
+export async function getReportPage(
+    id: string,
+    url: string
+): Promise<PageReport> {
     const encodedUrl = encodeURIComponent(url);
 
     const res = await fetch(
@@ -62,6 +70,35 @@ export async function getReportPage(id: string, url: string) {
 
     if (!res.ok) {
         throw new Error(`Failed to fetch report page: ${res.status}`);
+    }
+
+    return res.json();
+}
+
+export async function inspectIssue(
+    url: string,
+    issueId: string
+): Promise<InspectionResult> {
+    const params = new URLSearchParams({
+        url,
+        issue: issueId,
+    });
+
+    const res = await fetch(
+        `${API_BASE_URL}/inspect?${params.toString()}`,
+        {
+            cache: "no-store",
+        }
+    );
+
+    if (!res.ok) {
+        if (res.status === 404) {
+            throw new Error(
+                "This issue was not detected during the live inspection."
+            );
+        }
+
+        throw new Error(`Inspection failed: ${res.status}`);
     }
 
     return res.json();

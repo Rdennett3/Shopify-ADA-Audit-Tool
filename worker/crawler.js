@@ -17,9 +17,13 @@ async function discoverPages(baseUrl) {
         allUrls.push(...urls);
     }
 
-    const pages = [...new Set(allUrls)].map(classifyPage);
+    const pages = [...new Set(allUrls)]
+        .map(classifyPage);
 
-    return pages;
+    return {
+        sitemapIndex,
+        pages
+    };
 }
 
 module.exports = discoverPages;

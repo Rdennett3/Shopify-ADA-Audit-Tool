@@ -78,7 +78,7 @@ export default async function InspectionPage({
                         href={
                             `/scan/${id}/page?url=${encodeURIComponent(url)}`
                         }
-                        className="text-sm font-medium text-blue-700 hover:underline"
+                        className="text-sm font-medium text-blue-700 hover:underline main-btn"
                     >
                         ← Back to page findings
                     </Link>

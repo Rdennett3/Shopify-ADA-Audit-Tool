@@ -50,7 +50,7 @@ export default async function ScanDetailsPage({
     const templates = summary?.templates ?? [];
 
     return (
-        <main className="min-h-screen bg-slate-100 px-6 py-10">
+        <main className="min-h-screen px-6 py-10">
             <div className="mx-auto max-w-7xl">
                 <Link
                     href="/"
@@ -80,6 +80,12 @@ export default async function ScanDetailsPage({
                         <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold capitalize text-slate-700 shadow-sm">
                             {report.status}
                         </span>
+                        <Link
+                            href={`/scan/${id}/pages`}
+                            className="inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+                        >
+                            View scanned pages
+                        </Link>
                     </div>
                 </div>
 
@@ -95,7 +101,7 @@ export default async function ScanDetailsPage({
                     </div>
                 ) : (
                     <>
-                        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                             <MetricCard
                                 label="Pages scanned"
                                 value={summary.pagesScanned}
@@ -115,7 +121,23 @@ export default async function ScanDetailsPage({
                                 label="Lighthouse accessibility"
                                 value={scoreDisplay(lighthouse?.accessibility)}
                             />
+                            <MetricCard
+                                label="Scan coverage"
+                                value={
+                                    report.coverage
+                                        ? `${report.coverage.pagesScanned} / ${report.coverage.pagesDiscovered}`
+                                        : summary.pagesScanned
+                                }
+                            />
                         </section>
+
+                        {report.coverage?.scanMode === "sample" && (
+                            <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+                                This report is based on a representative sample of{" "}
+                                <strong>{report.coverage.pagesScanned}</strong> pages from{" "}
+                                <strong>{report.coverage.pagesDiscovered}</strong> discovered pages.
+                            </div>
+                        )}
 
                         <section className="mt-8">
                             <h2 className="mb-4 text-2xl font-bold text-slate-950">

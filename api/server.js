@@ -1,6 +1,8 @@
 const express = require("express");
 const { MongoClient } = require("mongodb");
 const cors = require("cors");
+const createReportService = require("./services/reportService");
+const inspectIssue = require("./services/inspectService");
 
 const app = express();
 app.use(cors());
@@ -12,21 +14,41 @@ let db;
 async function connect() {
     await client.connect();
     db = client.db("ada");
+    app.locals.reportService = createReportService(db);
 }
 
 connect();
 
 // Create scan job
 app.post("/scan", async (req, res) => {
-    const { url } = req.body;
+    const {
+        url,
+        scanMode = "sample"
+    } = req.body;
+
+    if (!url) {
+        return res.status(400).json({
+            error: "A URL is required"
+        });
+    }
+
+    if (!["sample", "full"].includes(scanMode)) {
+        return res.status(400).json({
+            error: "scanMode must be sample or full"
+        });
+    }
 
     const result = await db.collection("jobs").insertOne({
         url,
+        scanMode,
         status: "queued",
         createdAt: new Date()
     });
 
-    res.json({ jobId: result.insertedId });
+    res.json({
+        jobId: result.insertedId,
+        scanMode
+    });
 });
 
 // Get results
@@ -67,46 +89,29 @@ app.get("/report/:id", async (req, res) => {
 });
 
 app.get("/jobs", async (req, res) => {
-    const jobs = await db.collection("jobs")
-        .find({})
-        .sort({ createdAt: -1 })
-        .limit(20)
-        .toArray();
+    const jobs = await app.locals.reportService.getLatestJobs();
 
     res.json(jobs);
 });
 
 app.get("/report/:id/summary", async (req, res) => {
-    try {
-        const { ObjectId } = require("mongodb");
+    const summary = await app.locals.reportService.getSummary(req.params.id);
 
-        const job = await db.collection("jobs").findOne({
-            _id: new ObjectId(req.params.id)
-        });
-
-        if (!job) {
-            return res.status(404).json({
-                error: "Report not found"
-            });
-        }
-
-        res.json({
-            id: job._id,
-            url: job.url,
-            status: job.status,
-            createdAt: job.createdAt,
-            summary: job.results?.summary || null,
-            lighthouse: job.results?.lighthouse || null
-        });
-
-    } catch (err) {
-        console.error(err);
-
-        res.status(500).json({
-            error: "Server error",
-            details: err.message
-        });
+    if (!summary) {
+        return res.status(404).json({ error: "Report not found" });
     }
+
+    res.json(summary);
+});
+
+app.get("/report/:id/pages", async (req, res) => {
+    const pages = await app.locals.reportService.getPages(req.params.id);
+
+    if (!pages) {
+        return res.status(404).json({ error: "Pages not found" });
+    }
+
+    res.json(pages);
 });
 
 app.get("/report/:id/html", async (req, res) => {
@@ -264,6 +269,49 @@ app.get("/report/:id/html", async (req, res) => {
         console.error(err);
         res.status(500).send("Server error");
     }
+});
+
+app.get("/report/:id/page", async (req, res) => {
+    const { url } = req.query;
+
+    if (!url) {
+        return res.status(400).json({
+            error: "Missing required query parameter: url"
+        });
+    }
+
+    const page = await app.locals.reportService.getPageByUrl(
+        req.params.id,
+        url
+    );
+
+    if (!page) {
+        return res.status(404).json({
+            error: "Page not found"
+        });
+    }
+
+    res.json(page);
+});
+
+app.get("/inspect", async (req, res) => {
+    const { url, issue } = req.query;
+
+    if (!url || !issue) {
+        return res.status(400).json({
+            error: "Missing required query parameters: url and issue"
+        });
+    }
+
+    const result = await inspectIssue(url, issue);
+
+    if (!result) {
+        return res.status(404).json({
+            error: "Issue not found on page"
+        });
+    }
+
+    res.json(result);
 });
 
 app.listen(3000, () => console.log("API running on 3000"));

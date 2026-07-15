@@ -1,10 +1,61 @@
 const mapWcagIssue = require("./wcagMapper");
 const axeCore = require("axe-core");
 
-async function scanPages(page, pages) {
-    const scanTargets = pages
-        .filter(p => p.priority !== "low")
-        .slice(0, 20);
+function selectScanTargets(pages, maxPages = 20) {
+    const groupedPages = pages.reduce((groups, page) => {
+        const type = page.type || "unknown";
+
+        if (!groups[type]) {
+            groups[type] = [];
+        }
+
+        groups[type].push(page);
+
+        return groups;
+    }, {});
+
+    const selected = [];
+    const pageTypes = Object.keys(groupedPages);
+
+    // First, select one page from every available template type.
+    for (const type of pageTypes) {
+        const page = groupedPages[type].shift();
+
+        if (page) {
+            selected.push(page);
+        }
+    }
+
+    // Then fill the remaining slots in round-robin order.
+    while (
+        selected.length < maxPages &&
+        pageTypes.some(type => groupedPages[type].length > 0)
+    ) {
+        for (const type of pageTypes) {
+            if (selected.length >= maxPages) {
+                break;
+            }
+
+            const page = groupedPages[type].shift();
+
+            if (page) {
+                selected.push(page);
+            }
+        }
+    }
+
+    return selected;
+}
+
+async function scanPages(page, pages, scanMode = "sample") {
+    const eligiblePages = pages.filter(
+        page => page.priority !== "low"
+    );
+
+    const scanTargets =
+        scanMode === "full"
+            ? eligiblePages
+            : selectScanTargets(eligiblePages, 20);
 
     const pageResults = [];
 

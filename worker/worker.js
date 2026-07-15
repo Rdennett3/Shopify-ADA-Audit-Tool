@@ -26,7 +26,10 @@ async function run() {
                 { $set: { status: "running" } }
             );
 
-            const pages = await discoverPages(job.url);
+            const {
+                sitemapIndex,
+                pages
+            } = await discoverPages(job.url);
 
             console.log(
                 pages.reduce((acc, p) => {
@@ -49,7 +52,11 @@ async function run() {
 
             const page = await browser.newPage();
 
-            const pageResults = await scanPages(page, pages);
+            const pageResults = await scanPages(
+                page,
+                pages,
+                job.scanMode || "sample"
+            );
 
             await browser.close();
 
@@ -72,6 +79,12 @@ async function run() {
                     $set: {
                         status: "complete",
                         results: {
+                            coverage: {
+                                scanMode: job.scanMode || "sample",
+                                pagesDiscovered: pages.length,
+                                pagesScanned: pageResults.length,
+                                sitemapCount: sitemapIndex.length
+                            },
                             summary,
                             pages: pageResults,
                             lighthouse: {

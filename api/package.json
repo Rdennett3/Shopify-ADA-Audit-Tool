@@ -4,6 +4,8 @@
     "dependencies": {
         "express": "^4.19.2",
         "mongodb": "^6.5.0",
-        "cors": "^2.8.5"
+        "cors": "^2.8.5",
+        "puppeteer": "^22.0.0",
+        "axe-core": "^4.9.0"
     }
 }

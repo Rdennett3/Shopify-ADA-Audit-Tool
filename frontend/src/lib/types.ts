@@ -38,6 +38,7 @@ export interface ReportSummary {
     url: string;
     status: string;
     createdAt: string;
+    coverage?: ScanCoverage | null;
     summary: ScanSummary | null;
     lighthouse: LighthouseScores | null;
 }
@@ -51,4 +52,53 @@ export interface ScanJob {
         summary?: ScanSummary;
         lighthouse?: LighthouseScores;
     };
+}
+
+export interface PageListItem {
+    url: string;
+    type: string;
+    violations: number;
+}
+
+export interface PageIssue {
+    id: string;
+    impact?: string;
+    description?: string;
+    help?: string;
+    count: number;
+    title?: string;
+    wcag?: string;
+    level?: string;
+    severity?: string;
+    recommendation?: string;
+}
+
+export interface PageReport {
+    url: string;
+    type: string;
+    violations: number;
+    issues: PageIssue[];
+}
+
+export interface InspectionNode {
+    target: string[] | string;
+    html: string;
+    failureSummary?: string;
+}
+
+export interface InspectionResult {
+    url: string;
+    issue: string;
+    impact?: string;
+    description?: string;
+    help?: string;
+    helpUrl?: string;
+    nodes: InspectionNode[];
+}
+
+export interface ScanCoverage {
+    scanMode: "sample" | "full";
+    pagesDiscovered: number;
+    pagesScanned: number;
+    sitemapCount: number;
 }
