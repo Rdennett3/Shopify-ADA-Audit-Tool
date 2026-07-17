@@ -103,3 +103,47 @@ export async function inspectIssue(
 
     return res.json();
 }
+
+export interface CreateScanInput {
+    url: string;
+    scanMode?: "sample" | "full";
+}
+
+export interface CreateScanResult {
+    jobId: string;
+    scanMode: "sample" | "full";
+}
+
+export async function createScan(
+    input: CreateScanInput
+): Promise<CreateScanResult> {
+    const res = await fetch(`${API_BASE_URL}/scan`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            url: input.url,
+            scanMode: input.scanMode ?? "sample",
+        }),
+        cache: "no-store",
+    });
+
+    if (!res.ok) {
+        let message = `Failed to create scan: ${res.status}`;
+
+        try {
+            const body = await res.json();
+
+            if (body?.error) {
+                message = body.error;
+            }
+        } catch {
+            // Preserve the fallback error message.
+        }
+
+        throw new Error(message);
+    }
+
+    return res.json();
+}

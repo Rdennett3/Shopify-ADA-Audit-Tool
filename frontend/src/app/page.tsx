@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { getJobs } from "@/lib/api";
 import type { ScanJob } from "@/lib/types";
+import NewScanForm from "@/components/dashboard/NewScanForm";
+import ScanStatusPoller from "@/components/dashboard/ScanStatusPoller";
+
 
 function formatScore(score?: number) {
   return typeof score === "number"
@@ -11,17 +14,29 @@ function formatScore(score?: number) {
 export default async function HomePage() {
   const jobs: ScanJob[] = await getJobs();
 
+  const hasActiveScans = jobs.some((job) => {
+    const status = job.status?.toLowerCase();
+
+    return status === "queued" || status === "running";
+  });
+
   return (
     <main className="min-h-screen px-6 py-10">
+      <ScanStatusPoller hasActiveScans={hasActiveScans} />
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900">
-            Shopify ADA Audit Dashboard
-          </h1>
 
-          <p className="mt-2 text-slate-600">
-            Recent accessibility scans
-          </p>
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-slate-900">
+              Shopify ADA Audit Dashboard
+            </h1>
+
+            <p className="mt-2 text-slate-600">
+              Recent accessibility scans
+            </p>
+          </div>
+
+          <NewScanForm />
         </div>
 
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
